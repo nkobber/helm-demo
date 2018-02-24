@@ -1,0 +1,4 @@
+name: hello-world
+home: https://github.com/nkobber/helm-demo
+version: 0.0.1
+description: An example chart

@@ -1,0 +1,16 @@
+containerPort: 8080
+component: "hello-world"
+replicas: 1
+image: "nkobber/hello-world"
+imageTag: "latest"
+imagePullPolicy: "Always"
+servicePort: 8080
+containerPort: 8080
+cpu: "10m"
+memory: "56Mi"
+ingress:
+  hostname: hello-world.demo.ialocin.com
+  annotations:
+     kubernetes.io/ingress.class: nginx
+     kubernetes.io/tls-acme: "true"
+  tls: true

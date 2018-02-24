@@ -1,0 +1,37 @@
+# helm --namespace jenkins --name jenkins -f ./jenkins-values.yaml install stable/jenkins
+
+Master:
+  ImageTag: "2.108"
+  Memory: "512Mi"
+  HostName: jenkins.demo.ialocin.com
+  ServiceType: ClusterIP
+  InstallPlugins:
+      - kubernetes:1.3.1
+      - workflow-aggregator:2.5
+      - credentials-binding:1.15
+      - git:3.7.0
+      - pipeline-github-lib:1.0
+      - ghprb:1.40.0
+      - blueocean:1.4.2
+
+  ScriptApproval:
+    - "method groovy.json.JsonSlurperClassic parseText java.lang.String"
+    - "new groovy.json.JsonSlurperClassic"
+    - "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.Map java.util.Map"
+    - "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods split java.lang.String"
+    - "method java.util.Collection toArray"
+    - "staticMethod org.kohsuke.groovy.sandbox.impl.Checker checkedCall java.lang.Object boolean boolean java.lang.String java.lang.Object[]"
+    - "staticMethod org.kohsuke.groovy.sandbox.impl.Checker checkedGetProperty java.lang.Object boolean boolean java.lang.Object"
+
+  Ingress:
+    Annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+
+    TLS:
+      - secretName: jenkins.demo.ialocin.com
+        hosts:
+          - jenkins.demo.ialocin.com
+
+Agent:
+  Enabled: false
