@@ -58,7 +58,7 @@ podTemplate(label: 'jenkins-pipeline', containers: [
                 container('helm') {
                     helmConfig()
                     println "Deploying PR"
-                    sh "helm upgrade --install hello-world-${branch_name_lowercase} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=${branch_name_lowercase}-hello-world.demo.ialocin.com --namespace hello-world-${branch_name_lowercase}"
+                    sh "helm upgrade --install hello-world-${branch_name_lowercase} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=hello-world-${branch_name_lowercase}.demo.ialocin.com --namespace hello-world-${branch_name_lowercase}"
                     sleep(20)
                     sh "helm test hello-world-${branch_name_lowercase} --cleanup"
                 }
