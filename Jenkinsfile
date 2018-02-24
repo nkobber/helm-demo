@@ -6,6 +6,7 @@ def helmConfig() {
     sh "helm version"
 }
 
+def branch_name_lowercase = env.BRANCH_NAME.toLowerCase()
 def String image_tag
 
 podTemplate(label: 'jenkins-pipeline', containers: [
@@ -22,7 +23,7 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 
         checkout scm
 
-        image_tag = env.BRANCH_NAME + '-' + sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+        image_tag = branch_name_lowercase + '-' + sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
 
         stage('Test app') {
             println "success"
@@ -57,8 +58,9 @@ podTemplate(label: 'jenkins-pipeline', containers: [
                 container('helm') {
                     helmConfig()
                     println "Deploying PR"
-                    sh "helm upgrade --dry-run --install hello-world-${BRANCH_NAME} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=${env.BRANCH_NAME}-hello-world.demo.ialocin.com --namespace hello-world-${env.BRANCH_NAME}"
-                    sh "helm test hello-world-${BRANCH_NAME} --cleanup"
+                    sh "helm upgrade --install hello-world-${branch_name_lowercase} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=${branch_name_lowercase}-hello-world.demo.ialocin.com --namespace hello-world-${branch_name_lowercase}"
+                    sleep(20)
+                    sh "helm test hello-world-${branch_name_lowercase} --cleanup"
                 }
             }
         }
