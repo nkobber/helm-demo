@@ -1,11 +1,5 @@
 #!/usr/bin/groovy
 
-def helmConfig() {
-    println "Initiliazing Helm"
-    sh "helm init"
-    sh "helm version"
-}
-
 def branch_name_lowercase = env.BRANCH_NAME.toLowerCase()
 def String image_tag
 
@@ -45,7 +39,9 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 
         stage('Helm lint/test') {
             container('helm') {
-                helmConfig()
+                println "Initiliazing Helm"
+                sh "helm init"
+                sh "helm version"
                 println "Lint helm chart"
                 sh "helm lint charts/hello-world"
                 println "Deploy dry-run"
@@ -56,7 +52,6 @@ podTemplate(label: 'jenkins-pipeline', containers: [
         if (env.BRANCH_NAME =~ "PR-*") {
             stage('Deploy') {
                 container('helm') {
-                    helmConfig()
                     println "Deploying PR"
                     sh "helm upgrade --install hello-world-${branch_name_lowercase} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=hello-world-${branch_name_lowercase}.demo.ialocin.com --namespace hello-world-${branch_name_lowercase}"
                     sleep(20)
@@ -68,7 +63,6 @@ podTemplate(label: 'jenkins-pipeline', containers: [
         if (env.BRANCH_NAME == "master") {
             stage('Deploy') {
                 container('helm') {
-                    helmConfig()
                     println "Deploying to prod"
                     sh "helm upgrade --install hello-world charts/hello-world --set imageTag=${image_tag} --namespace hello-world"
                 }
