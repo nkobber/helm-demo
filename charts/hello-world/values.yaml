@@ -2,7 +2,7 @@ containerPort: 8080
 component: "hello-world"
 replicas: 1
 image: "nkobber/hello-world"
-imageTag: "latest"
+imageTag: "master-196b6ca"
 imagePullPolicy: "Always"
 servicePort: 8080
 containerPort: 8080

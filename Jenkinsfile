@@ -1,18 +1,12 @@
 #!/usr/bin/groovy
 
-def helmConfig() {
-    println "Initiliazing Helm"
-    sh "helm init"
-    sh "helm version"
-}
-
+def branch_name_lowercase = env.BRANCH_NAME.toLowerCase()
 def String image_tag
 
 podTemplate(label: 'jenkins-pipeline', containers: [
         containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave:3.10-1-alpine', args: '${computer.jnlpmac} ${computer.name}'),
         containerTemplate(name: 'docker', image: 'docker:17', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:v2.7.2', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'kubectl', image: 'lachlanevenson/k8s-kubectl:v1.9.3', command: 'cat', ttyEnabled: true)
+        containerTemplate(name: 'helm', image: 'lachlanevenson/k8s-helm:v2.7.2', command: 'cat', ttyEnabled: true)
     ],
     volumes: [
         hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
@@ -22,7 +16,7 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 
         checkout scm
 
-        image_tag = env.BRANCH_NAME + '-' + sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
+        image_tag = branch_name_lowercase + '-' + sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
 
         stage('Test app') {
             println "success"
@@ -44,7 +38,9 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 
         stage('Helm lint/test') {
             container('helm') {
-                helmConfig()
+                println "Initiliazing Helm"
+                sh "helm init"
+                sh "helm version"
                 println "Lint helm chart"
                 sh "helm lint charts/hello-world"
                 println "Deploy dry-run"
@@ -55,10 +51,10 @@ podTemplate(label: 'jenkins-pipeline', containers: [
         if (env.BRANCH_NAME =~ "PR-*") {
             stage('Deploy') {
                 container('helm') {
-                    helmConfig()
                     println "Deploying PR"
-                    sh "helm upgrade --dry-run --install hello-world-${BRANCH_NAME} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=${env.BRANCH_NAME}-hello-world.demo.ialocin.com --namespace hello-world-${env.BRANCH_NAME}"
-                    sh "helm test hello-world-${BRANCH_NAME} --cleanup"
+                    sh "helm upgrade --install hello-world-${branch_name_lowercase} charts/hello-world --set imageTag=${image_tag} --set ingress.hostname=hello-world-${branch_name_lowercase}.demo.ialocin.com --namespace hello-world-${branch_name_lowercase}"
+                    sleep(20)
+                    sh "helm test hello-world-${branch_name_lowercase} --cleanup"
                 }
             }
         }
@@ -66,7 +62,6 @@ podTemplate(label: 'jenkins-pipeline', containers: [
         if (env.BRANCH_NAME == "master") {
             stage('Deploy') {
                 container('helm') {
-                    helmConfig()
                     println "Deploying to prod"
                     sh "helm upgrade --install hello-world charts/hello-world --set imageTag=${image_tag} --namespace hello-world"
                 }
